@@ -25,7 +25,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-const COLORS = ['#66bb6a', '#ffca28', '#ef5350']; // Positive, Neutral, Negative
+const COLORS = [ '#ef5350', '#ffca28', '#66bb6a']; // Positive, Neutral, Negative
 
 const getSentimentChartData = (sentimentBreakdown) => {
   if (!sentimentBreakdown) return [];
