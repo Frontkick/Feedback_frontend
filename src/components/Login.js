@@ -9,7 +9,8 @@ import {
   Typography,
   InputLabel,
   FormControl,
-  Paper
+  Paper,
+  CircularProgress
 } from '@mui/material';
 import api from '../services/api';
 
@@ -17,10 +18,12 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('employee');
+  const [loading, setLoading] = useState(false); // new state
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true); // start loading
     try {
       const res = await api.login({ username, password });
       localStorage.setItem('token', res.access_token);
@@ -28,6 +31,8 @@ const Login = () => {
       navigate(role === 'manager' ? '/manager' : '/employee');
     } catch {
       alert('Invalid credentials');
+    } finally {
+      setLoading(false); // stop loading
     }
   };
 
@@ -73,19 +78,22 @@ const Login = () => {
               <MenuItem value="manager">Manager</MenuItem>
             </Select>
           </FormControl>
+
           <Button
             type="submit"
             variant="contained"
             color="primary"
             fullWidth
             sx={{ mt: 2 }}
+            disabled={loading} // disable while loading
           >
-            Login
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Login'}
           </Button>
         </form>
+
         <Typography variant="body2" align="center" sx={{ mt: 2 }}>
           Don&apos;t have an account?{' '}
-          <Button onClick={() => navigate('/signup')} size="small">
+          <Button onClick={() => navigate('/signup')} size="small" disabled={loading}>
             Sign up
           </Button>
         </Typography>
