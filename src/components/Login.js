@@ -44,6 +44,10 @@ const Login = () => {
       minHeight="100vh"
       bgcolor="#f5f5f5"
     >
+      <Typography variant="h4" color="primary" gutterBottom>
+              Feedback Application
+            </Typography>
+            
       <Paper elevation={3} sx={{ p: 4, width: 400 }}>
         <Typography variant="h5" gutterBottom>
           Login
