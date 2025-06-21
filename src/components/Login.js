@@ -18,12 +18,12 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('employee');
-  const [loading, setLoading] = useState(false); // new state
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // start loading
+    setLoading(true);
     try {
       const res = await api.login({ username, password });
       localStorage.setItem('token', res.access_token);
@@ -32,22 +32,25 @@ const Login = () => {
     } catch {
       alert('Invalid credentials');
     } finally {
-      setLoading(false); // stop loading
+      setLoading(false);
     }
   };
 
   return (
     <Box
       display="flex"
-      justifyContent="center"
+      flexDirection="column"
       alignItems="center"
+      justifyContent="center"
       minHeight="100vh"
       bgcolor="#f5f5f5"
     >
+      {/* App Heading */}
       <Typography variant="h4" color="primary" gutterBottom>
-              Feedback Application
-            </Typography>
-            
+        Feedback Application
+      </Typography>
+
+      {/* Login Form */}
       <Paper elevation={3} sx={{ p: 4, width: 400 }}>
         <Typography variant="h5" gutterBottom>
           Login
@@ -89,7 +92,7 @@ const Login = () => {
             color="primary"
             fullWidth
             sx={{ mt: 2 }}
-            disabled={loading} // disable while loading
+            disabled={loading}
           >
             {loading ? <CircularProgress size={24} color="inherit" /> : 'Login'}
           </Button>
