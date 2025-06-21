@@ -40,11 +40,18 @@ const Signup = () => {
   return (
     <Box
       display="flex"
-      justifyContent="center"
+      flexDirection="column"
       alignItems="center"
+      justifyContent="center"
       minHeight="100vh"
       bgcolor="#f5f5f5"
     >
+      {/* Heading */}
+      <Typography variant="h4" color="primary" gutterBottom>
+        Feedback Application
+      </Typography>
+
+      {/* Signup Form */}
       <Paper elevation={3} sx={{ p: 4, width: 400 }}>
         <Typography variant="h5" gutterBottom>
           Sign Up
