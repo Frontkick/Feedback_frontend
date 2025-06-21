@@ -1,5 +1,5 @@
 import axios from 'axios';
-const API = axios.create({ baseURL: 'https://curved-nelli-hellfire-7f813c38.koyeb.app' });
+const API = axios.create({ baseURL: 'http://172.17.0.2:5000' });
 API.interceptors.request.use(config => {
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;

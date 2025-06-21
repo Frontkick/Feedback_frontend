@@ -13,7 +13,8 @@ import {
   Card,
   CardContent,
   CardActions,
-  Grid
+  Grid,
+  CircularProgress
 } from '@mui/material';
 
 import {
@@ -25,7 +26,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-const COLORS = [ '#ef5350', '#ffca28', '#66bb6a']; // Positive, Neutral, Negative
+const COLORS = ['#ef5350', '#ffca28', '#66bb6a']; // Positive, Neutral, Negative
 
 const getSentimentChartData = (sentimentBreakdown) => {
   if (!sentimentBreakdown) return [];
@@ -34,7 +35,6 @@ const getSentimentChartData = (sentimentBreakdown) => {
     value,
   }));
 };
-
 
 const Manager = () => {
   const [employees, setEmployees] = useState([]);
@@ -46,11 +46,14 @@ const Manager = () => {
     sentiment: 'neutral',
     tags: ''
   });
+  const [submitLoading, setSubmitLoading] = useState(false);
   const [history, setHistory] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     setEmployees(await api.getEmployees());
@@ -59,17 +62,24 @@ const Manager = () => {
   };
 
   const submitFeedback = async () => {
-    const payload = {
-      employee_id: selectedEmp,
-      strengths: newFeedback.strengths,
-      improvements: newFeedback.improvements,
-      sentiment: newFeedback.sentiment,
-      tags: newFeedback.tags.split(',').map(t => t.trim())
-    };
-    await api.createFeedback(payload);
-    setNewFeedback({ strengths: '', improvements: '', sentiment: 'neutral', tags: '' });
-    setSelectedEmp('');
-    await fetchData();
+    setSubmitLoading(true);
+    try {
+      const payload = {
+        employee_id: selectedEmp,
+        strengths: newFeedback.strengths,
+        improvements: newFeedback.improvements,
+        sentiment: newFeedback.sentiment,
+        tags: newFeedback.tags.split(',').map(t => t.trim())
+      };
+      await api.createFeedback(payload);
+      setNewFeedback({ strengths: '', improvements: '', sentiment: 'neutral', tags: '' });
+      setSelectedEmp('');
+      await fetchData();
+    } catch (error) {
+      console.error('Submit feedback failed:', error);
+    } finally {
+      setSubmitLoading(false);
+    }
   };
 
   const startEdit = fb => {
@@ -102,59 +112,77 @@ const Manager = () => {
   const downloadPDF = () => {
     const doc = new jsPDF();
     doc.text('Feedbacks Given', 10, 10);
-    history.forEach((fb, i) => {
-      const y = 20 + i * 30;
-      doc.text(`Sentiment: ${fb.sentiment}`, 10, y + 6);
-      if (fb.strengths) doc.text(`Strengths: ${fb.strengths}`, 10, y + 12);
-      if (fb.improvements) doc.text(`Improvements: ${fb.improvements}`, 10, y + 18);
-      if (fb.tags && fb.tags.length)
-        doc.text(`Tags: ${fb.tags.join(', ')}`, 10, y + 24);
+
+    let y = 20;
+
+    history.forEach((fb) => {
+      doc.text(`Name: ${fb.employee_username}`, 10, y);
+      y += 6;
+
+      doc.text(`Sentiment: ${fb.sentiment}`, 10, y);
+      y += 6;
+
+      if (fb.strengths) {
+        doc.text(`Strengths: ${fb.strengths}`, 10, y);
+        y += 6;
+      }
+
+      if (fb.improvements) {
+        doc.text(`Improvements: ${fb.improvements}`, 10, y);
+        y += 6;
+      }
+
+      if (fb.tags && fb.tags.length) {
+        doc.text(`Tags: ${fb.tags.join(', ')}`, 10, y);
+        y += 6;
+      }
+
+      y += 10;
     });
+
     doc.save('manager_feedbacks.pdf');
   };
 
   return (
     <Box p={4} maxWidth="1000px" mx="auto">
       {/* Team Overview */}
-<Box mb={6}>
-  <Typography variant="h5" gutterBottom>Team Overview</Typography>
-  {overview && (
-    <Grid container spacing={4}>
-      <Grid item xs={12} md={6}>
-        <Box>
-          <Typography>Employees: {overview.employees_count}</Typography>
-          <Typography>Total Feedbacks: {overview.total_feedbacks}</Typography>
-        </Box>
-      </Grid>
-      <Grid item xs={12} md={6}>
-  <Box width="100%" minWidth={300} height={250}>
-    <ResponsiveContainer width="100%" height="100%">
-      <PieChart>
-        <Pie
-          data={getSentimentChartData(overview.sentiment_breakdown)}
-          dataKey="value"
-          nameKey="name"
-          cx="50%"
-          cy="50%"
-          outerRadius={80}
-          fill="#8884d8"
-          label
-        >
-          {getSentimentChartData(overview.sentiment_breakdown).map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-          ))}
-        </Pie>
-        <Tooltip />
-        <Legend />
-      </PieChart>
-    </ResponsiveContainer>
-  </Box>
-</Grid>
-
-    </Grid>
-  )}
-</Box>
-
+      <Box mb={6}>
+        <Typography variant="h5" gutterBottom>Team Overview</Typography>
+        {overview && (
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={6}>
+              <Box>
+                <Typography>Employees: {overview.employees_count}</Typography>
+                <Typography>Total Feedbacks: {overview.total_feedbacks}</Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Box width="100%" minWidth={300} height={250}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={getSentimentChartData(overview.sentiment_breakdown)}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="#8884d8"
+                      label
+                    >
+                      {getSentimentChartData(overview.sentiment_breakdown).map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </Box>
+            </Grid>
+          </Grid>
+        )}
+      </Box>
 
       {/* New Feedback Form */}
       <Box mb={6}>
@@ -215,17 +243,17 @@ const Manager = () => {
             />
           </Grid>
         </Grid>
-        <br></br>
+        <br />
         <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              disabled={!selectedEmp}
-              onClick={submitFeedback}
-            >
-              Submit
-            </Button>
-          </Grid>
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={!selectedEmp || submitLoading}
+            onClick={submitFeedback}
+          >
+            {submitLoading ? <CircularProgress size={20} color="inherit" /> : 'Submit'}
+          </Button>
+        </Grid>
       </Box>
 
       {/* Feedback History */}

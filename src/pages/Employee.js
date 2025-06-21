@@ -10,12 +10,15 @@ import {
   CardActions,
   TextField,
   Grid,
-  Chip
+  Chip,
+  CircularProgress,
 } from '@mui/material';
 
 const Employee = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [comment, setComment] = useState({});
+  const [ackLoading, setAckLoading] = useState({});
+  const [commentLoading, setCommentLoading] = useState({});
 
   useEffect(() => {
     fetchFeedbacks();
@@ -31,21 +34,27 @@ const Employee = () => {
   };
 
   const acknowledge = async (id) => {
+    setAckLoading((prev) => ({ ...prev, [id]: true }));
     try {
       await api.acknowledge(id);
       fetchFeedbacks();
     } catch (err) {
       console.error('Acknowledge failed:', err);
+    } finally {
+      setAckLoading((prev) => ({ ...prev, [id]: false }));
     }
   };
 
   const addComment = async (id) => {
+    setCommentLoading((prev) => ({ ...prev, [id]: true }));
     try {
       await api.addComment(id, { employee_comments: comment[id] });
       setComment({ ...comment, [id]: '' });
       fetchFeedbacks();
     } catch (err) {
       console.error('Add comment failed:', err);
+    } finally {
+      setCommentLoading((prev) => ({ ...prev, [id]: false }));
     }
   };
 
@@ -154,8 +163,17 @@ const Employee = () => {
 
               <CardActions>
                 {!fb.acknowledged ? (
-                  <Button size="small" color="primary" onClick={() => acknowledge(fb.id)}>
-                    Acknowledge
+                  <Button
+                    size="small"
+                    color="primary"
+                    onClick={() => acknowledge(fb.id)}
+                    disabled={ackLoading[fb.id]}
+                  >
+                    {ackLoading[fb.id] ? (
+                      <CircularProgress size={20} />
+                    ) : (
+                      'Acknowledge'
+                    )}
                   </Button>
                 ) : (
                   <Typography color="success.main" fontWeight="bold" fontSize="14px">
@@ -180,8 +198,13 @@ const Employee = () => {
                     color="success"
                     size="small"
                     onClick={() => addComment(fb.id)}
+                    disabled={commentLoading[fb.id]}
                   >
-                    Add Comment
+                    {commentLoading[fb.id] ? (
+                      <CircularProgress size={20} color="inherit" />
+                    ) : (
+                      'Add Comment'
+                    )}
                   </Button>
                 </Box>
               </Box>
